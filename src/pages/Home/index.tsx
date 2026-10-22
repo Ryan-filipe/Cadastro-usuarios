@@ -27,7 +27,19 @@ function Home() {
   }
 
   useEffect(() => {
-    getUsers();
+    let isMounted = true;
+
+    api.get<User[]>('/usuarios')
+      .then((response) => {
+        if (isMounted) setUsers(response.data);
+      })
+      .catch((error) => {
+        console.error('Erro ao buscar usuários:', error);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
 
@@ -57,8 +69,8 @@ function Home() {
 
     const idade = Number(idadeTexto);
 
-    if (!Number.isFinite(idade) || idade < 0) {
-      alert('Digite uma idade válida.');
+    if (!Number.isInteger(idade) || idade < 0) {
+      alert('Digite uma idade válida (número inteiro maior ou igual a zero).');
       return;
     }
 
@@ -82,7 +94,12 @@ function Home() {
 
   return (
     <div className="container">
-      <form onSubmit={(event) => event.preventDefault()}>
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          void createUser();
+        }}
+      >
         <h1>Cadastro</h1>
 
         <input
@@ -90,6 +107,7 @@ function Home() {
           name="nome"
           type="text"
           ref={inputName}
+          required
         />
 
         <input
@@ -97,7 +115,9 @@ function Home() {
           name="idade"
           type="number"
           min="0"
+          step="1"
           ref={inputAge}
+          required
         />
 
         <input
@@ -105,9 +125,10 @@ function Home() {
           name="email"
           type="email"
           ref={inputEmail}
+          required
         />
 
-        <button type="button" onClick={createUser}>
+        <button type="submit">
           Cadastrar
         </button>
       </form>
